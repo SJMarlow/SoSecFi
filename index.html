@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Expenses</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Expenses">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f3f5f4">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,700&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#f3f5f4; --surface:#ffffff; --ink:#1d2b2a; --muted:#5b6b69; --line:#d6dedc;
+  --accent:#1f6f66; --accent-soft:#e1efec; --gold:#a8741a; --warn:#a4501b; --warn-soft:#f8e9df;
+  --f-display:"Literata",Georgia,"Times New Roman",serif;
+  --f-body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#121a19; --surface:#1a2524; --ink:#e6eeec; --muted:#9aaba8; --line:#2e3d3b;
+  --accent:#5cc2b3; --accent-soft:#1f3532; --gold:#e0b25a; --warn:#f0a070; --warn-soft:#3a2a20; color-scheme:dark}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+.form>*,.form .row>*{min-width:0}
+.field input,.field select{width:100%}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.45;
+  padding:env(safe-area-inset-top) max(16px,env(safe-area-inset-right)) env(safe-area-inset-bottom) max(16px,env(safe-area-inset-left))}
+.wrap{max-width:560px;margin:0 auto;padding:20px 0 48px;display:flex;flex-direction:column;gap:18px}
+h1,h2{font-family:var(--f-display);font-weight:700;margin:0;line-height:1.15}
+h2{font-size:1.25rem}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+
+/* Month header */
+.monthbar{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.monthbar h1{font-size:2.1rem;text-align:center;flex:1}
+.monthbar h1 small{display:block;font-family:var(--f-body);font-size:.9rem;font-weight:500;color:var(--muted);margin-top:2px}
+.navbtn{width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--surface);font-size:1.5rem;line-height:1;display:grid;place-items:center;color:var(--accent)}
+.navbtn:disabled{opacity:.3}
+.today-link{align-self:center;background:var(--accent-soft);color:var(--accent);border:0;border-radius:999px;padding:6px 16px;font-weight:600;font-size:.95rem}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px}
+.label{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:8px;display:block}
+
+/* Money fields */
+.field{display:flex;align-items:center;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);overflow:hidden;min-height:54px}
+.field:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.field .pre{padding:0 4px 0 14px;color:var(--muted);font-weight:600;font-size:1.2rem}
+.field input,.field select{flex:1;min-width:0;border:0;background:transparent;font-size:1.2rem;padding:12px 14px 12px 6px;outline:none;font-variant-numeric:tabular-nums;-webkit-appearance:none;appearance:none}
+.field select{padding-left:14px;padding-right:40px;background-image:linear-gradient(45deg,transparent 50%,var(--ink) 50%),linear-gradient(135deg,var(--ink) 50%,transparent 50%);background-position:calc(100% - 22px) 50%,calc(100% - 15px) 50%;background-size:7px 7px;background-repeat:no-repeat}
+.field input[type=date]{padding-left:14px;min-height:52px}
+.ss .field input{font-family:var(--f-display);font-size:1.6rem;font-weight:700}
+.ss .field .pre{font-size:1.5rem}
+.hint{font-size:.88rem;color:var(--muted);margin:8px 0 0}
+.carry{display:flex;justify-content:space-between;align-items:center;width:100%;margin-top:12px;padding:10px 12px;border-radius:10px;border:1px dashed var(--line);background:transparent;text-align:left;font-size:.98rem;color:var(--muted)}
+.carry b{color:var(--ink);font-variant-numeric:tabular-nums;font-size:1.05rem}
+.carry.neg b{color:var(--warn)}
+
+/* Add form */
+.form{display:grid;gap:14px}
+.form .row{display:grid;grid-template-columns:1fr 1.2fr;gap:12px}
+@media (max-width:380px){.form .row{grid-template-columns:1fr}}
+.colhead{display:block;font-weight:600;font-size:.95rem;margin-bottom:6px}
+.btn{border:0;border-radius:12px;min-height:56px;padding:0 20px;font-weight:700;font-size:1.15rem;background:var(--accent);color:#fff}
+.btn.secondary{background:var(--accent-soft);color:var(--accent)}
+.btn.danger{background:var(--warn-soft);color:var(--warn)}
+.btnrow{display:flex;gap:10px}
+.btnrow .btn{flex:1}
+.err{color:var(--warn);font-size:.95rem;margin:0;min-height:0}
+.editing-tag{display:inline-block;background:var(--warn-soft);color:var(--warn);font-size:.8rem;font-weight:700;padding:3px 10px;border-radius:999px;margin-left:8px;vertical-align:middle}
+
+/* List */
+.list{display:flex;flex-direction:column}
+.day{font-size:.85rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:14px 2px 6px;border-bottom:1px solid var(--line)}
+.day:first-child{padding-top:2px}
+.item{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;background:transparent;border:0;border-bottom:1px solid var(--line);padding:14px 2px;text-align:left;font-size:1.08rem}
+.item:active{background:var(--accent-soft)}
+.item .amt{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.item .chev{color:var(--muted);margin-left:6px}
+.empty{color:var(--muted);text-align:center;padding:18px 0 6px;margin:0}
+.listhint{font-size:.85rem;color:var(--muted);margin:10px 0 0;text-align:center}
+
+/* Total */
+.total{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--accent);color:#fff;border-radius:12px;padding:18px 20px}
+.total .t-label{font-family:var(--f-display);font-weight:700;font-size:1.5rem;letter-spacing:.02em}
+.total .t-amt{font-family:var(--f-display);font-weight:700;font-size:2rem;font-variant-numeric:tabular-nums}
+@media (prefers-color-scheme:dark){.total{color:#0f1817}}
+
+.footer{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.linkbtn{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:10px 18px;font-weight:600;font-size:.98rem;color:var(--accent)}
+
+/* Sheet */
+.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:flex-end;justify-content:center;z-index:10}
+.backdrop[hidden]{display:none}
+.sheet{background:var(--bg);width:100%;max-width:560px;max-height:88vh;overflow:auto;border-radius:18px 18px 0 0;padding:20px 18px calc(24px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:16px}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.closex{border:0;background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:8px 16px;font-weight:700}
+.catlist{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.catlist li{display:flex;justify-content:space-between;align-items:center;padding:6px 6px 6px 14px;border-bottom:1px solid var(--line);min-height:52px}
+.catlist li:last-child{border-bottom:0}
+.rm{border:0;background:var(--warn-soft);color:var(--warn);border-radius:8px;padding:8px 14px;font-weight:600;font-size:.95rem}
+.addcat{display:flex;gap:10px}
+.addcat .field{flex:1}
+.addcat .btn{min-height:54px}
+.small{font-size:.9rem;color:var(--muted);margin:0}
+.sep{border:0;border-top:1px solid var(--line);margin:4px 0}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 20px;border-radius:999px;font-weight:600;z-index:20;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="monthbar">
+    <button class="navbtn" id="prevM" aria-label="Previous month">‹</button>
+    <h1 id="monthTitle">December</h1>
+    <button class="navbtn" id="nextM" aria-label="Next month">›</button>
+  </div>
+  <button class="today-link" id="backToday" hidden>Back to this month</button>
+
+  <section class="panel ss">
+    <label class="label" for="ssInput">SS Check</label>
+    <div class="field"><span class="pre">$</span><input id="ssInput" inputmode="decimal" autocomplete="off"></div>
+    <button class="carry" id="carryBtn"><span id="carryLabel">Carried over</span><b id="carryAmt">$0.00</b></button>
+  </section>
+
+  <section class="panel">
+    <h2 id="formTitle" style="margin-bottom:14px">Add an expense</h2>
+    <div class="form">
+      <div>
+        <label class="colhead" for="catSel">Expense</label>
+        <div class="field"><select id="catSel"></select></div>
+      </div>
+      <div id="customWrap" hidden>
+        <label class="colhead" for="customCat">Type the expense</label>
+        <div class="field"><input id="customCat" autocomplete="off" autocapitalize="words" placeholder="e.g. Haircut"></div>
+      </div>
+      <div class="row">
+        <div>
+          <label class="colhead" for="amtInput">Cost</label>
+          <div class="field"><span class="pre">$</span><input id="amtInput" inputmode="decimal" autocomplete="off" placeholder="0.00"></div>
+        </div>
+        <div>
+          <label class="colhead" for="dateInput">Date</label>
+          <div class="field"><input id="dateInput" type="date"></div>
+        </div>
+      </div>
+      <p class="err" id="formErr" hidden></p>
+      <button class="btn" id="saveBtn">Add expense</button>
+      <div class="btnrow" id="editBtns" hidden>
+        <button class="btn secondary" id="cancelEdit">Cancel</button>
+        <button class="btn danger" id="deleteBtn">Delete</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2 style="margin-bottom:10px">Expenses</h2>
+    <div class="list" id="list"></div>
+  </section>
+
+  <div class="total">
+    <span class="t-label">TOTAL</span>
+    <span class="t-amt" id="totalAmt">$0.00</span>
+  </div>
+
+  <div class="footer">
+    <button class="linkbtn" id="openCats">Edit my expense list</button>
+    <button class="linkbtn" id="openBackup">Backup</button>
+  </div>
+</div>
+
+<!-- Edit list sheet -->
+<div class="backdrop" id="catSheet" hidden>
+  <div class="sheet" role="dialog" aria-labelledby="catH">
+    <div class="sheet-head"><h2 id="catH">My expense list</h2><button class="closex" data-close>Done</button></div>
+    <p class="small">These are the choices in the Expense menu. They always show in A–Z order.</p>
+    <div class="addcat">
+      <div class="field"><input id="newCat" autocomplete="off" autocapitalize="words" placeholder="Add a new one"></div>
+      <button class="btn" id="addCatBtn">Add</button>
+    </div>
+    <ul class="catlist" id="catList"></ul>
+  </div>
+</div>
+
+<!-- Carry-over sheet -->
+<div class="backdrop" id="carrySheet" hidden>
+  <div class="sheet" role="dialog" aria-labelledby="carryH">
+    <div class="sheet-head"><h2 id="carryH">Carried over</h2><button class="closex" data-close>Cancel</button></div>
+    <p class="small" id="carryExplain"></p>
+    <div class="field"><span class="pre">$</span><input id="carryInput" inputmode="decimal" autocomplete="off"></div>
+    <button class="btn" id="carrySave">Save</button>
+    <button class="btn secondary" id="carryAuto">Use the automatic amount</button>
+  </div>
+</div>
+
+<!-- Delete confirm sheet -->
+<div class="backdrop" id="delSheet" hidden>
+  <div class="sheet" role="dialog" aria-labelledby="delH">
+    <h2 id="delH">Delete this expense?</h2>
+    <p class="small" id="delText"></p>
+    <div class="btnrow">
+      <button class="btn secondary" data-close>Keep it</button>
+      <button class="btn danger" id="delConfirm">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Backup sheet -->
+<div class="backdrop" id="backupSheet" hidden>
+  <div class="sheet" role="dialog" aria-labelledby="bkH">
+    <div class="sheet-head"><h2 id="bkH">Backup</h2><button class="closex" data-close>Done</button></div>
+    <p class="small">Everything is saved on this phone. A backup file is a safety copy you can keep in Files, email, or Notes, and load back in if anything goes wrong.</p>
+    <button class="btn" id="exportBtn">Save a backup copy</button>
+    <hr class="sep">
+    <p class="small">Restoring replaces what's in the app now with the backup.</p>
+    <button class="btn secondary" id="importBtn">Restore from a backup</button>
+    <input type="file" id="importFile" accept="application/json,.json,.txt" hidden>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  const KEY = "ssExpenses.v1";
+  const START_SS = 265820; // cents
+  const DEFAULT_CATS = ["Amazon","Apple TV","Cat Food","Dinner","Dog Food","Dr. Brinton","Dr. Gagnon","Dr. Kumar","Dr. Martin","EBMUD","Gas","KALW","Lunch","Meds","Netflix","NYT","PG&E","Trash"];
+  const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const $ = id => document.getElementById(id);
+  const money = new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"});
+  const fmt = c => money.format(c/100);
+  const plain = c => (c/100).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+  const sortCats = a => a.sort((x,y)=>x.localeCompare(y,undefined,{sensitivity:"base"}));
+
+  // ---- dates (local time) ----
+  const pad = n => String(n).padStart(2,"0");
+  const todayStr = () => { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+  const monthOf = s => s.slice(0,7);
+  const addMonth = (k,n) => { let [y,m]=k.split("-").map(Number); m+=n; while(m>12){m-=12;y++} while(m<1){m+=12;y--} return `${y}-${pad(m)}`; };
+  const monthName = k => MONTHS[Number(k.slice(5))-1];
+  const lastDay = k => { const [y,m]=k.split("-").map(Number); return `${k}-${pad(new Date(y,m,0).getDate())}`; };
+
+  // ---- money parsing ----
+  function parseMoney(str){
+    const s = String(str).replace(/[$,\s]/g,"");
+    if(!/^-?\d*\.?\d*$/.test(s) || s===""||s==="."||s==="-") return null;
+    const n = Math.round(parseFloat(s)*100);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  // ---- storage ----
+  let state;
+  function fresh(){
+    const k = monthOf(todayStr());
+    return {v:1, first:k, lastSS:START_SS, categories:sortCats([...DEFAULT_CATS]), months:{[k]:{ss:START_SS,carry:null,items:[]}}};
+  }
+  function load(){
+    try{ const raw = localStorage.getItem(KEY); state = raw ? JSON.parse(raw) : fresh(); }
+    catch(e){ state = fresh(); }
+    if(!state || !state.months || !state.first) state = fresh();
+    ensureMonths();
+    save();
+  }
+  function save(){
+    try{ localStorage.setItem(KEY, JSON.stringify(state)); }
+    catch(e){ toast("Couldn't save — phone storage may be full"); }
+  }
+  // Make sure every month from the first one up to now exists, so carry-over can chain through.
+  function ensureMonths(){
+    const cur = monthOf(todayStr());
+    let k = state.first, prevSS = state.lastSS;
+    if(k > cur){ state.first = cur; k = cur; }
+    while(k <= cur){
+      if(!state.months[k]) state.months[k] = {ss: prevSS ?? state.lastSS, carry:null, items:[]};
+      prevSS = state.months[k].ss;
+      k = addMonth(k,1);
+    }
+  }
+  const total = k => (state.months[k]?.items || []).reduce((s,i)=>s+i.amt,0);
+  function autoCarry(k){
+    // leftover from the month before: its SS + its carry-over − its spending
+    if(k <= state.first) return 0;
+    const p = addMonth(k,-1), m = state.months[p];
+    if(!m) return 0;
+    return m.ss + carryFor(p) - total(p);
+  }
+  function carryFor(k){
+    const m = state.months[k];
+    if(m && m.carry !== null && m.carry !== undefined) return m.carry;
+    // iterative to avoid deep recursion over many years
+    let c = 0, x = state.first;
+    while(x < k){
+      const mm = state.months[x];
+      const cx = (mm && mm.carry != null) ? mm.carry : c;
+      c = (mm ? mm.ss : 0) + cx - total(x);
+      x = addMonth(x,1);
+    }
+    return k <= state.first ? 0 : c;
+  }
+
+  // ---- view ----
+  let view = monthOf(todayStr());
+  let editingId = null;
+
+  function renderAll(){
+    ensureMonths();
+    const cur = monthOf(todayStr());
+    if(view > cur) view = cur;
+    if(view < state.first) view = state.first;
+    const m = state.months[view];
+    const [y] = view.split("-");
+    $("monthTitle").innerHTML = monthName(view) + (y !== String(new Date().getFullYear()) || view !== cur ? `<small>${y}</small>` : "");
+    $("prevM").disabled = view <= state.first;
+    $("nextM").disabled = view >= cur;
+    $("backToday").hidden = view === cur;
+    if(document.activeElement !== $("ssInput")) $("ssInput").value = plain(m.ss);
+
+    const c = carryFor(view);
+    $("carryLabel").textContent = view <= state.first && m.carry == null ? "Carried over from last month" : `Carried over from ${monthName(addMonth(view,-1))}`;
+    $("carryAmt").textContent = (c<0?"−":"") + fmt(Math.abs(c));
+    $("carryBtn").classList.toggle("neg", c<0);
+
+    renderCats();
+    renderList();
+    $("totalAmt").textContent = fmt(total(view));
+    if(!editingId) setDateBounds();
+  }
+
+  function renderCats(keep){
+    const sel = $("catSel"), prev = keep ?? sel.value;
+    sel.innerHTML = `<option value="">Choose…</option>` +
+      state.categories.map(c=>`<option>${esc(c)}</option>`).join("") +
+      `<option value="__custom">✏️ Type my own…</option>`;
+    if([...sel.options].some(o=>o.value===prev)) sel.value = prev;
+  }
+
+  function renderList(){
+    const items = [...state.months[view].items].sort((a,b)=> a.date===b.date ? b.t-a.t : (a.date<b.date?1:-1));
+    const box = $("list");
+    if(!items.length){ box.innerHTML = `<p class="empty">No expenses yet for ${monthName(view)}.</p>`; return; }
+    let html = "", lastD = "";
+    for(const it of items){
+      if(it.date !== lastD){
+        lastD = it.date;
+        const [yy,mm,dd] = it.date.split("-").map(Number);
+        const d = new Date(yy,mm-1,dd);
+        const label = it.date===todayStr() ? "Today" : d.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"});
+        html += `<div class="day">${label}</div>`;
+      }
+      html += `<button class="item" data-id="${it.id}"><span>${esc(it.cat)}</span><span class="amt">${fmt(it.amt)}<span class="chev">›</span></span></button>`;
+    }
+    box.innerHTML = html + `<p class="listhint">Tap an expense to change or delete it.</p>`;
+  }
+
+  const esc = s => String(s).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+
+  // ---- form ----
+  function setDateBounds(){
+    const di = $("dateInput");
+    di.min = `${view}-01`; di.max = lastDay(view);
+  }
+  function resetForm(){
+    editingId = null;
+    $("formTitle").innerHTML = "Add an expense";
+    $("saveBtn").textContent = "Add expense";
+    $("editBtns").hidden = true;
+    $("catSel").value = "";
+    $("customWrap").hidden = true;
+    $("customCat").value = "";
+    $("amtInput").value = "";
+    setDateBounds();
+    const t = todayStr();
+    $("dateInput").value = monthOf(t) === view ? t : `${view}-01`;
+    showErr("");
+  }
+  function showErr(msg){ $("formErr").textContent = msg; $("formErr").hidden = !msg; }
+
+  $("catSel").addEventListener("change", () => {
+    const custom = $("catSel").value === "__custom";
+    $("customWrap").hidden = !custom;
+    if(custom) $("customCat").focus();
+  });
+
+  $("saveBtn").addEventListener("click", () => {
+    let cat = $("catSel").value;
+    if(cat === "__custom") cat = $("customCat").value.trim();
+    if(!cat){ showErr($("catSel").value==="__custom" ? "Please type what the expense was." : "Please choose an expense."); return; }
+    const amt = parseMoney($("amtInput").value);
+    if(amt === null || amt <= 0){ showErr("Please enter the cost, like 12.50"); $("amtInput").focus(); return; }
+    let date = $("dateInput").value || todayStr();
+    if(monthOf(date) !== view){ showErr(`Please pick a date in ${monthName(view)}.`); return; }
+    const items = state.months[view].items;
+    if(editingId){
+      const it = items.find(i=>i.id===editingId);
+      if(it){ it.cat = cat; it.amt = amt; it.date = date; }
+      toast("Changes saved");
+    } else {
+      items.push({id: Date.now().toString(36)+Math.random().toString(36).slice(2,6), t:Date.now(), cat, amt, date});
+      toast(`Added ${cat} — ${fmt(amt)}`);
+    }
+    save();
+    editingId = null;
+    renderAll(); resetForm();
+    $("amtInput").blur();
+  });
+
+  $("list").addEventListener("click", e => {
+    const b = e.target.closest(".item"); if(!b) return;
+    const it = state.months[view].items.find(i=>i.id===b.dataset.id); if(!it) return;
+    editingId = it.id;
+    $("formTitle").innerHTML = `Change expense <span class="editing-tag">Editing</span>`;
+    $("saveBtn").textContent = "Save changes";
+    $("editBtns").hidden = false;
+    renderCats("");
+    if(state.categories.includes(it.cat)){ $("catSel").value = it.cat; $("customWrap").hidden = true; }
+    else { $("catSel").value = "__custom"; $("customWrap").hidden = false; $("customCat").value = it.cat; }
+    $("amtInput").value = plain(it.amt);
+    setDateBounds();
+    $("dateInput").value = it.date;
+    showErr("");
+    $("formTitle").scrollIntoView({behavior:"smooth",block:"start"});
+  });
+  $("cancelEdit").addEventListener("click", () => { resetForm(); });
+  $("deleteBtn").addEventListener("click", () => {
+    const it = state.months[view].items.find(i=>i.id===editingId); if(!it) return;
+    $("delText").textContent = `${it.cat} — ${fmt(it.amt)}`;
+    open("delSheet");
+  });
+  $("delConfirm").addEventListener("click", () => {
+    const m = state.months[view];
+    m.items = m.items.filter(i=>i.id!==editingId);
+    save(); close("delSheet"); editingId = null; renderAll(); resetForm(); toast("Expense deleted");
+  });
+
+  // ---- SS check ----
+  function commitSS(){
+    const v = parseMoney($("ssInput").value);
+    const m = state.months[view];
+    if(v === null || v < 0){ $("ssInput").value = plain(m.ss); return; }
+    if(v === m.ss){ $("ssInput").value = plain(v); return; }
+    m.ss = v;
+    if(view === monthOf(todayStr())) state.lastSS = v; // new months start with this amount
+    save(); $("ssInput").value = plain(v); renderAll(); toast("SS check amount updated");
+  }
+  $("ssInput").addEventListener("blur", commitSS);
+  $("ssInput").addEventListener("keydown", e => { if(e.key==="Enter") e.target.blur(); });
+  $("ssInput").addEventListener("focus", e => setTimeout(()=>e.target.select(),0));
+
+  // ---- carry-over ----
+  $("carryBtn").addEventListener("click", () => {
+    const a = autoCarry(view);
+    $("carryH").textContent = view <= state.first ? "Carried over from last month" : `Carried over from ${monthName(addMonth(view,-1))}`;
+    $("carryExplain").textContent = view <= state.first
+      ? "This is the first month in the app. If there's money left from last month, enter it here."
+      : `This is worked out automatically from what was left in ${monthName(addMonth(view,-1))} (${(a<0?"−":"")+fmt(Math.abs(a))}). You can type a different amount if needed.`;
+    $("carryInput").value = plain(carryFor(view));
+    $("carryAuto").hidden = state.months[view].carry == null;
+    open("carrySheet");
+  });
+  $("carrySave").addEventListener("click", () => {
+    const v = parseMoney($("carryInput").value);
+    if(v === null){ $("carryInput").focus(); return; }
+    state.months[view].carry = (v === autoCarry(view) && view > state.first) ? null : v;
+    save(); close("carrySheet"); renderAll(); toast("Carry-over updated");
+  });
+  $("carryAuto").addEventListener("click", () => {
+    state.months[view].carry = null; save(); close("carrySheet"); renderAll();
+  });
+
+  // ---- month nav ----
+  $("prevM").addEventListener("click", () => { view = addMonth(view,-1); editingId=null; renderAll(); resetForm(); });
+  $("nextM").addEventListener("click", () => { view = addMonth(view,1); editingId=null; renderAll(); resetForm(); });
+  $("backToday").addEventListener("click", () => { view = monthOf(todayStr()); editingId=null; renderAll(); resetForm(); });
+
+  // ---- category list ----
+  function renderCatSheet(){
+    $("catList").innerHTML = state.categories.map(c =>
+      `<li><span>${esc(c)}</span><button class="rm" data-cat="${esc(c)}">Remove</button></li>`).join("") ||
+      `<li><span class="small">The list is empty. Add one above.</span></li>`;
+  }
+  $("openCats").addEventListener("click", () => { renderCatSheet(); open("catSheet"); });
+  function addCat(){
+    const v = $("newCat").value.trim().replace(/\s+/g," ");
+    if(!v) return;
+    if(state.categories.some(c=>c.toLowerCase()===v.toLowerCase())){ toast(`${v} is already on the list`); return; }
+    state.categories.push(v); sortCats(state.categories); save();
+    $("newCat").value = ""; renderCatSheet(); renderCats(); toast(`Added ${v}`);
+  }
+  $("addCatBtn").addEventListener("click", addCat);
+  $("newCat").addEventListener("keydown", e => { if(e.key==="Enter") addCat(); });
+  $("catList").addEventListener("click", e => {
+    const b = e.target.closest(".rm"); if(!b) return;
+    const c = b.dataset.cat;
+    if(b.dataset.confirm !== "1"){ b.dataset.confirm = "1"; b.textContent = "Tap to confirm"; setTimeout(()=>{ if(b.isConnected){ b.dataset.confirm=""; b.textContent="Remove"; } },3000); return; }
+    state.categories = state.categories.filter(x=>x!==c); save(); renderCatSheet(); renderCats(); toast(`Removed ${c}`);
+  });
+
+  // ---- backup ----
+  $("openBackup").addEventListener("click", () => open("backupSheet"));
+  $("exportBtn").addEventListener("click", async () => {
+    const name = `expenses-backup-${todayStr()}.json`;
+    const blob = new Blob([JSON.stringify(state,null,1)],{type:"application/json"});
+    const file = new File([blob], name, {type:"application/json"});
+    try{
+      if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:"Expenses backup"}); return; }
+    }catch(e){ if(e && e.name==="AbortError") return; }
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  });
+  $("importBtn").addEventListener("click", () => $("importFile").click());
+  $("importFile").addEventListener("change", async e => {
+    const f = e.target.files[0]; if(!f) return;
+    try{
+      const data = JSON.parse(await f.text());
+      if(!data || !data.months || !data.first || !Array.isArray(data.categories)) throw 0;
+      state = data; ensureMonths(); save(); view = monthOf(todayStr()); editingId=null;
+      close("backupSheet"); renderAll(); resetForm(); toast("Backup restored");
+    }catch(err){ toast("That file isn't an Expenses backup"); }
+    e.target.value = "";
+  });
+
+  // ---- sheets & toast ----
+  function open(id){ $(id).hidden = false; }
+  function close(id){ $(id).hidden = true; }
+  document.querySelectorAll(".backdrop").forEach(bd => {
+    bd.addEventListener("click", e => { if(e.target === bd || e.target.closest("[data-close]")) bd.hidden = true; });
+  });
+  let tt;
+  function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove("show"),2200); }
+
+  // Roll into a new month automatically if the app is left open / reopened
+  document.addEventListener("visibilitychange", () => {
+    if(document.visibilityState === "visible"){
+      const before = Object.keys(state.months).length; ensureMonths();
+      if(Object.keys(state.months).length !== before){ save(); view = monthOf(todayStr()); editingId=null; renderAll(); resetForm(); }
+      else renderAll();
+    }
+  });
+
+  load();
+  renderAll();
+  resetForm();
+  if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{});
+  if("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(()=>{});
+})();
+</script>
+</body>
+</html>
