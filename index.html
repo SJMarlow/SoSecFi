@@ -62,6 +62,10 @@ button{cursor:pointer}
 .carry{display:flex;justify-content:space-between;align-items:center;width:100%;margin-top:12px;padding:10px 12px;border-radius:10px;border:1px dashed var(--line);background:transparent;text-align:left;font-size:.98rem;color:var(--muted)}
 .carry b{color:var(--ink);font-variant-numeric:tabular-nums;font-size:1.05rem}
 .carry.neg b{color:var(--warn)}
+.toptotal{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding:12px 14px;border-radius:10px;background:var(--accent);color:#fff}
+.toptotal span{font-family:var(--f-display);font-weight:700;font-size:1.1rem;letter-spacing:.02em}
+.toptotal b{font-family:var(--f-display);font-size:1.4rem;font-variant-numeric:tabular-nums}
+@media (prefers-color-scheme:dark){.toptotal{color:#0f1817}}
 
 /* Add form */
 .form{display:grid;gap:14px}
@@ -129,6 +133,7 @@ button{cursor:pointer}
     <label class="label" for="ssInput">SS Check</label>
     <div class="field"><span class="pre">$</span><input id="ssInput" inputmode="decimal" autocomplete="off"></div>
     <button class="carry" id="carryBtn"><span id="carryLabel">Carried over</span><b id="carryAmt">$0.00</b></button>
+    <div class="toptotal"><span>TOTAL</span><b id="totalTop">$0.00</b></div>
   </section>
 
   <section class="panel">
@@ -331,6 +336,7 @@ button{cursor:pointer}
     renderCats();
     renderList();
     $("totalAmt").textContent = fmt(total(view));
+    $("totalTop").textContent = fmt(total(view));
     if(!editingId) setDateBounds();
   }
 
