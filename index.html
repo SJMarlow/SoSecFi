@@ -132,7 +132,7 @@ button{cursor:pointer}
   </section>
 
   <section class="panel">
-    <h2 id="formTitle" style="margin-bottom:14px">Add an expense</h2>
+    <h2 id="formTitle" style="margin-bottom:14px" hidden></h2>
     <div class="form">
       <div>
         <label class="colhead" for="catSel">Expense</label>
@@ -369,7 +369,7 @@ button{cursor:pointer}
   }
   function resetForm(){
     editingId = null;
-    $("formTitle").innerHTML = "Add an expense";
+    $("formTitle").hidden = true;
     $("saveBtn").textContent = "Add expense";
     $("editBtns").hidden = true;
     $("catSel").value = "";
@@ -417,6 +417,7 @@ button{cursor:pointer}
     const it = state.months[view].items.find(i=>i.id===b.dataset.id); if(!it) return;
     editingId = it.id;
     $("formTitle").innerHTML = `Change expense <span class="editing-tag">Editing</span>`;
+    $("formTitle").hidden = false;
     $("saveBtn").textContent = "Save changes";
     $("editBtns").hidden = false;
     renderCats("");
@@ -426,7 +427,7 @@ button{cursor:pointer}
     setDateBounds();
     $("dateInput").value = it.date;
     showErr("");
-    $("formTitle").scrollIntoView({behavior:"smooth",block:"start"});
+    $("catSel").closest(".panel").scrollIntoView({behavior:"smooth",block:"start"});
   });
   $("cancelEdit").addEventListener("click", () => { resetForm(); });
   $("deleteBtn").addEventListener("click", () => {
