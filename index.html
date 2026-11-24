@@ -171,11 +171,6 @@ button{cursor:pointer}
     <div class="list" id="list"></div>
   </section>
 
-  <div class="total">
-    <span class="t-label">TOTAL</span>
-    <span class="t-amt" id="totalAmt">$0.00</span>
-  </div>
-
   <div class="footer">
     <button class="linkbtn" id="openCats">Edit my expense list</button>
     <button class="linkbtn" id="openBackup">Backup</button>
@@ -335,7 +330,6 @@ button{cursor:pointer}
 
     renderCats();
     renderList();
-    $("totalAmt").textContent = fmt(total(view));
     $("totalTop").textContent = fmt(total(view));
     if(!editingId) setDateBounds();
   }
