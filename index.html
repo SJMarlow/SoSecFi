@@ -66,6 +66,8 @@ button{cursor:pointer}
 .toptotal span{font-family:var(--f-display);font-weight:700;font-size:1.1rem;letter-spacing:.02em}
 .toptotal b{font-family:var(--f-display);font-size:1.4rem;font-variant-numeric:tabular-nums}
 @media (prefers-color-scheme:dark){.toptotal{color:#0f1817}}
+.toptotal.remain{margin-top:8px;background:var(--accent-soft);color:var(--accent)}
+.toptotal.remain.neg{background:var(--warn-soft);color:var(--warn)}
 
 /* Add form */
 .form{display:grid;gap:14px}
@@ -134,6 +136,7 @@ button{cursor:pointer}
     <div class="field"><span class="pre">$</span><input id="ssInput" inputmode="decimal" autocomplete="off"></div>
     <button class="carry" id="carryBtn"><span id="carryLabel">Carried over</span><b id="carryAmt">$0.00</b></button>
     <div class="toptotal"><span>Total Spent</span><b id="totalTop">$0.00</b></div>
+    <div class="toptotal remain" id="remainRow"><span>Remaining</span><b id="remainTop">$0.00</b></div>
   </section>
 
   <section class="panel">
@@ -331,6 +334,9 @@ button{cursor:pointer}
     renderCats();
     renderList();
     $("totalTop").textContent = fmt(total(view));
+    const rem = m.ss + c - total(view);
+    $("remainTop").textContent = (rem<0?"−":"") + fmt(Math.abs(rem));
+    $("remainRow").classList.toggle("neg", rem<0);
     if(!editingId) setDateBounds();
   }
 
