@@ -62,11 +62,17 @@ button{cursor:pointer}
 .carry{display:flex;justify-content:space-between;align-items:center;width:100%;margin-top:12px;padding:10px 12px;border-radius:10px;border:1px dashed var(--line);background:transparent;text-align:left;font-size:.98rem;color:var(--muted)}
 .carry b{color:var(--ink);font-variant-numeric:tabular-nums;font-size:1.05rem}
 .carry.neg b{color:var(--warn)}
-.toptotal{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding:12px 14px;border-radius:10px;background:var(--accent);color:#fff}
+.toptotal{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding:12px 14px;border-radius:10px;background:#e4f1e4;color:#2f7a3b}
 .toptotal span{font-family:var(--f-display);font-weight:700;font-size:1.1rem;letter-spacing:.02em}
 .toptotal b{font-family:var(--f-display);font-size:1.4rem;font-variant-numeric:tabular-nums}
-@media (prefers-color-scheme:dark){.toptotal{color:#0f1817}}
-.toptotal.remain{margin-top:8px;background:var(--accent-soft);color:var(--accent)}
+@media (prefers-color-scheme:dark){.toptotal{background:#1f3324;color:#7fcf8a}}
+.toptotal.remain{margin-top:8px;background:#2f7a3b;color:#fff}
+.ssrow{margin-top:0;cursor:text}
+.ssrow .sslabel{color:#000}
+@media (prefers-color-scheme:dark){.ssrow .sslabel{color:var(--ink)}}
+.ssrow:focus-within{border-style:solid;border-color:var(--accent)}
+.ssval{display:flex;align-items:center;font-weight:700;color:var(--ink);font-size:1.05rem;font-variant-numeric:tabular-nums}
+.ssval input{width:9ch;border:0;background:transparent;font:inherit;font-weight:700;color:inherit;text-align:right;padding:0;outline:none}
 .toptotal.remain.neg{background:var(--warn-soft);color:var(--warn)}
 
 /* Add form */
@@ -132,8 +138,7 @@ button{cursor:pointer}
   <button class="today-link" id="backToday" hidden>Back to this month</button>
 
   <section class="panel ss">
-    <label class="label" for="ssInput">SS Check</label>
-    <div class="field"><span class="pre">$</span><input id="ssInput" inputmode="decimal" autocomplete="off"></div>
+    <label class="carry ssrow" for="ssInput"><span class="sslabel">SS Check</span><span class="ssval">$<input id="ssInput" inputmode="decimal" autocomplete="off" aria-label="SS check amount"></span></label>
     <button class="carry" id="carryBtn"><span id="carryLabel">Carried over</span><b id="carryAmt">$0.00</b></button>
     <div class="toptotal"><span>Total Spent</span><b id="totalTop">$0.00</b></div>
     <div class="toptotal remain" id="remainRow"><span>Remaining</span><b id="remainTop">$0.00</b></div>
@@ -324,10 +329,10 @@ button{cursor:pointer}
     $("prevM").disabled = view <= state.first;
     $("nextM").disabled = view >= cur;
     $("backToday").hidden = view === cur;
-    if(document.activeElement !== $("ssInput")) $("ssInput").value = plain(m.ss);
+    if(document.activeElement !== $("ssInput")){ $("ssInput").value = plain(m.ss); fitSS(); }
 
     const c = carryFor(view);
-    $("carryLabel").textContent = view <= state.first && m.carry == null ? "Carried over from last month" : `Carried over from ${monthName(addMonth(view,-1))}`;
+    $("carryLabel").textContent = "Carried over";
     $("carryAmt").textContent = (c<0?"−":"") + fmt(Math.abs(c));
     $("carryBtn").classList.toggle("neg", c<0);
 
@@ -457,9 +462,12 @@ button{cursor:pointer}
     if(view === monthOf(todayStr())) state.lastSS = v; // new months start with this amount
     save(); $("ssInput").value = plain(v); renderAll(); toast("SS check amount updated");
   }
-  $("ssInput").addEventListener("blur", commitSS);
+  function fitSS(){ const i = $("ssInput"), ctx = fitSS.c || (fitSS.c = document.createElement("canvas").getContext("2d")), cs = getComputedStyle(i); ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`; i.style.width = Math.ceil(ctx.measureText(i.value || "0").width + 2) + "px"; }
+  $("ssInput").addEventListener("blur", () => { commitSS(); fitSS(); });
+  $("ssInput").addEventListener("input", fitSS);
   $("ssInput").addEventListener("keydown", e => { if(e.key==="Enter") e.target.blur(); });
-  $("ssInput").addEventListener("focus", e => setTimeout(()=>e.target.select(),0));
+  $("ssInput").addEventListener("focus", e => { e.target.dataset.fresh = "1"; setTimeout(()=>e.target.select(),0); });
+  $("ssInput").addEventListener("mouseup", e => { if(e.target.dataset.fresh){ e.preventDefault(); e.target.dataset.fresh = ""; } });
 
   // ---- carry-over ----
   $("carryBtn").addEventListener("click", () => {
@@ -555,6 +563,7 @@ button{cursor:pointer}
   load();
   renderAll();
   resetForm();
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitSS);
   if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{});
   if("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(()=>{});
 })();
